@@ -1,36 +1,26 @@
-import sys
-import os
-from pathlib import Path
-from operator import add
-
 from pyspark.sql import SparkSession
-from pyspark.sql.types import IntegerType
+from pyspark.sql import functions as func
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from pathlib import Path
+import os
+from pyspark.sql import SparkSession
 
-def perform_analysis_dataframe(df, output_path):
-    """
-    Perform this analysis by only using Dataframe APIs
-    """
-    df_profiles = df.groupBy('name').agg({'age':'avg', '*':'count'}).withColumnRenamed("avg(age)", "avg_age").withColumnRenamed("count(1)", "counter")
-    result_df = df_profiles.filter(df_profiles.counter > 1).select("name", "avg_age")
-    result_df = result_df.withColumn("avg_age", result_df["avg_age"].cast(IntegerType()))
-    result_df.repartition(1).write.csv(output_path, mode='overwrite')
+def perform_analysis_dataframe(df, output_df_path):
+    pass
+    df_profile = df.groupBy("name").agg({'age':'avg','*':'count'}) \
+    .withColumnRenamed("avg(age)","age") \
+    .withColumnRenamed("count(1)","counter") \
     
-
-def perform_analysis_sql(session, df, output_path):
-    """
-    Perform this analysis by using SQL queries and tempViews    
-    """
+    result_df = df_profile.filter(df_profile.counter >=2)
+    result_df = result_df.withColumn("age",result_df["age"].cast(IntegerType()))
+    result_df.repartition(1).write.csv(output_df_path, mode='overwrite')
     
-    # Create a temporary view associated with the input data
-    df.createOrReplaceTempView("users")
-
-    # Submit SQL queries on the view
-    df_2 = session.sql("select name, avg(age) FROM users GROUP BY name HAVING count(*) > 1;") 
-    df_2.repartition(1).write.csv(output_sql_path, mode='overwrite')  
-
-    # Drop the view
-    session.catalog.dropTempView("users")
-
+def perform_analysis_sql(session,df, output_sql_path):
+    df.createOrReplaceTempView("user_table")
+    result_sql = spark.sql("SELECT name, cast(avg(age) as int) as age, count(*) as counter FROM user_table GROUP BY name HAVING count(1) >= 2")
+    session.catalog.dropTempView("user_table")
+    result_sql.repartition(1).write.csv(output_sql_path, mode='overwrite')
+    
 if __name__ == "__main__":
 
     # Create an instance of spark
