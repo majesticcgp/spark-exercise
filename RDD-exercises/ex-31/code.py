@@ -20,7 +20,7 @@ if __name__ == "__main__":
     output_path = os.path.join(absolute_path, 'output')
 
     # Input data    
-    lines = spark.read.text(input_path).rdd.map(lambda x: x[0])
+    lines = spark.read.text(input_path).rdd.map(lambda x: x[0]) 
 
     # Filter out data not containing the work 'google'
     lines_w_google = lines.filter(lambda x: 'google' in x)
