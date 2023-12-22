@@ -33,10 +33,37 @@ if __name__ == "__main__":
     For example, if you have an RDD of integers, the `func` would be
     a function that takes two integers as input and returns
     another integer.
+    
+    
+    If the code like this
+    result = temperatures_rdd.reduce(lambda x,y: x if x > y else y)
+    * It'll compare for each line of the RDD
+    * First of it'll will compare first element in single line of the RDD if it equals then compare the second element and so on
+    
+    
+    If the code like this
+    result = temperatures_rdd.reduce(lambda x,y: x + y)
+     * result  = ('s1', 20.5, 's2', 30.1, 's1', 60.2, 's2', 20.4, 's1', 55.5, 's2', 52.5)
+     
+    If the code like this
+    result = temperatures_rdd.reduce(lambda x,y: x[1] + y[1]) ==> ERROR b/c the result format not match the constructed of RDD (sensor_id, pm_10)
+    * We must CREATE NEW "FORMATE" construct a new tuple to hold the result
+    ==> result = temperatures_rdd.reduce(lambda x, y: (x[0], x[1] + y[1]))
+    *It'll take the first ID element to present the id                                                        
+    
+    
+    
+    
+    The reduce() method it will not change the FORMAT of the RDD it will aggregate
+    the things that we want to calculate
+    
+    In this ex below the result after we use reduce() method like this
+    
+    (sensor_id, pm_10) ==> ('s1', 60.2)
     '''
     result = temperatures_rdd.reduce(lambda x,y: x if x[1] > y[1] else y)
     getMaxTemp =  result[1]
-    print(getMaxTemp)
+    print(result)
 
     
     
